@@ -1,0 +1,11 @@
+streamlit
+transformers
+langchain
+langchain_community
+langchain_text_splitters
+langchain_chroma
+chromadb
+sentence-transformers
+pypdf
+faiss-cpu
+tqdm
