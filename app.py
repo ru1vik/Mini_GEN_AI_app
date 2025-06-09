@@ -4,7 +4,6 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 import torch
 import os
@@ -56,22 +55,24 @@ def process_pdf(pdf_path, embedder, rebuild_db):
     texts = text_splitter.split_documents(documents)
 
     vectorstore = FAISS.from_documents(
-    texts,
-    embedder
-
+        texts,
+        embedder
     )
     
     return vectorstore
 
 # --- BUILD PROMPT ---
 def build_prompt(context, user_question):
-    prompt_template = prompt_template = """
+    prompt_template = """
 Answer the following question based on the provided context.
 
 Context:
 {context}
 
+Question:
+{question}
 
+Answer:
 """
     prompt = PromptTemplate.from_template(prompt_template)
     return prompt.format(context=context, question=user_question)
@@ -90,20 +91,18 @@ def main():
     rebuild_db = st.sidebar.checkbox("Reset vector DB (force re-embed)", value=False)
 
     if uploaded_pdf is not None:
+        # Save PDF
         pdf_path = os.path.join("uploaded_pdf", uploaded_pdf.name)
         os.makedirs("uploaded_pdf", exist_ok=True)
         with open(pdf_path, "wb") as f:
             f.write(uploaded_pdf.getbuffer())
 
         st.sidebar.success("PDF uploaded!")
-    if not os.path.exists("db"):
-        st.sidebar.warning("No existing vector DB found. Rebuilding...")
-        rebuild_db = True
 
         # Load embedding model
         embedder = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
 
-        # Process PDF
+        # Build vectorstore
         vectorstore = process_pdf(pdf_path, embedder, rebuild_db)
 
         # Load LLM pipeline
@@ -138,6 +137,9 @@ def main():
             # Display assistant message
             st.chat_message("assistant").markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
+
+    else:
+        st.info("Please upload a PDF to get started.")
 
 if __name__ == "__main__":
     main()
