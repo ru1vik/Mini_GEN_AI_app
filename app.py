@@ -4,7 +4,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.prompts import PromptTemplate
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, pipeline
 import torch
 import os
 import shutil
@@ -18,10 +18,10 @@ EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"  # Small & fast
 @st.cache_resource
 def model():
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-    model = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME,
-        torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-    )
+    model = AutoModelForSeq2SeqLM.from_pretrained(
+    MODEL_NAME,
+    torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+)
     model.to("cuda" if torch.cuda.is_available() else "cpu")
 
     pipe = pipeline(
