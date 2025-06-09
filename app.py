@@ -1,7 +1,7 @@
 import streamlit as st
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -12,7 +12,7 @@ import shutil
 import gc
 
 # --- MODEL SETTINGS ---
-MODEL_NAME = "microsoft/DialoGPT-small"  # No API key required, chat tuned
+MODEL_NAME = "google/flan-t5-base"  # No API key required, chat tuned
 EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"  # Small & fast
 
 # --- LOAD LLM MODEL ---
@@ -55,10 +55,10 @@ def process_pdf(pdf_path, embedder, rebuild_db):
     )
     texts = text_splitter.split_documents(documents)
 
-    vectorstore = Chroma.from_documents(
-        texts,
-        embedder,
-        persist_directory="db"
+    vectorstore = FAISS.from_documents(
+    texts,
+    embedder
+
     )
     vectorstore.persist()
 
@@ -97,6 +97,9 @@ def main():
             f.write(uploaded_pdf.getbuffer())
 
         st.sidebar.success("PDF uploaded!")
+    if not os.path.exists("db"):
+        st.sidebar.warning("No existing vector DB found. Rebuilding...")
+        rebuild_db = True
 
         # Load embedding model
         embedder = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
