@@ -60,8 +60,7 @@ def process_pdf(pdf_path, embedder, rebuild_db):
     embedder
 
     )
-    vectorstore.persist()
-
+    
     return vectorstore
 
 # --- BUILD PROMPT ---
